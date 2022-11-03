@@ -1,12 +1,5 @@
 # Changelog
 
-## 1.3.0 - 2022-09-30
-
-### What's Changed
-
-- Support WhatsApp ID (waid) for Contacts
-- Improved README
-
 ## 1.2.0 - 2022-06-02
 
 ### What's Changed

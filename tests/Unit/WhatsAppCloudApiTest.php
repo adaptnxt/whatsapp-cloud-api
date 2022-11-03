@@ -10,8 +10,10 @@ use Netflie\WhatsAppCloudApi\Message\Contact\Phone;
 use Netflie\WhatsAppCloudApi\Message\Contact\PhoneType;
 use Netflie\WhatsAppCloudApi\Message\Media\LinkID;
 use Netflie\WhatsAppCloudApi\Message\Media\MediaObjectID;
+use Netflie\WhatsAppCloudApi\Message\OptionsList\Action;
+use Netflie\WhatsAppCloudApi\Message\OptionsList\Row;
+use Netflie\WhatsAppCloudApi\Message\OptionsList\Section;
 use Netflie\WhatsAppCloudApi\Message\Template\Component;
-use Netflie\WhatsAppCloudApi\Tests\WhatsAppCloudApiTestConfiguration;
 use Netflie\WhatsAppCloudApi\WhatsAppCloudApi;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
@@ -707,60 +709,72 @@ final class WhatsAppCloudApiTest extends TestCase
         $this->assertEquals(false, $response->isError());
     }
 
-    public function test_send_contact_with_wa_id()
-    {
-        $to = $this->faker->phoneNumber;
-        $url = $this->buildRequestUri();
-        $first_name = $this->faker->firstName();
-        $last_name = $this->faker->lastName;
-        $phone = $this->faker->e164PhoneNumber;
-        $phone_type = PhoneType::CELL();
+	public function test_send_list()
+	{
+		$to = $this->faker->phoneNumber;
+		$url = $this->buildRequestUri();
 
-        $body = [
-            'messaging_product' => 'whatsapp',
-            'recipient_type' => 'individual',
-            'to' => $to,
-            'type' => 'contacts',
-            'contacts' => [
-                [
-                    'name' => [
-                        'formatted_name' => "$first_name $last_name",
-                        'first_name' => $first_name,
-                        'last_name' => $last_name,
-                    ],
-                    'phones' => [
-                        [
-                            'phone' => $phone,
-                            'type' => $phone_type,
-                            'wa_id' => $phone,
-                        ],
-                    ],
-                ],
-            ],
-        ];
-        $encoded_body = json_encode($body);
-        $headers = [
-            'Authorization' => 'Bearer ' . $this->access_token,
-            'Content-Type' => 'application/json',
-        ];
+		$listHeader = ['type' => 'text', 'text' => $this->faker->text(60)];
+		$listBody = ['text' => $this->faker->text(1024)];
+		$listFooter = ['text' => $this->faker->text(60)];
 
-        $this->client_handler
-            ->send($url, $encoded_body, $headers, Argument::type('int'))
-            ->shouldBeCalled()
-            ->willReturn(new RawResponse($headers, $encoded_body, 200));
+		$listRows = [
+			['id' => $this->faker->uuid, 'title' => $this->faker->text(24), 'description' => $this->faker->text(72)],
+			['id' => $this->faker->uuid, 'title' => $this->faker->text(24), 'description' => $this->faker->text(72)],
+		];
+		$listSections = [['title' => $this->faker->text, 'rows' => $listRows]];
+		$listAction = ['button' => $this->faker->text, 'sections' => $listSections];
 
-        $contact_name = new ContactName($first_name, $last_name);
-        $response = $this->whatsapp_app_cloud_api->sendContact(
-            $to,
-            $contact_name,
-            new Phone($phone, $phone_type, $phone)
-        );
+		$body = [
+			'messaging_product' => 'whatsapp',
+			'recipient_type' => 'individual',
+			'to' => $to,
+			'type' => 'interactive',
+			'interactive' => [
+				'type' => 'list',
+				'header' => $listHeader,
+				'body' => $listBody,
+				'footer' => $listFooter,
+				'action' => $listAction,
+			],
+		];
+		$encoded_body = json_encode($body);
+		$headers = [
+			'Authorization' => 'Bearer ' . $this->access_token,
+			'Content-Type' => 'application/json',
+		];
 
-        $this->assertEquals(200, $response->httpStatusCode());
-        $this->assertEquals($body, $response->decodedBody());
-        $this->assertEquals($encoded_body, $response->body());
-        $this->assertEquals(false, $response->isError());
-    }
+		$this->client_handler
+			->send($url, $encoded_body, $headers, Argument::type('int'))
+			->shouldBeCalled()
+			->willReturn(new RawResponse($headers, $encoded_body, 200));
+
+		$actionSections = [];
+
+		foreach ($listAction['sections'] as $section)
+		{
+			$sectionRows = [];
+
+			foreach ($section['rows'] as $row) {
+				$sectionRows[] = new Row($row['id'], $row['title'], $row['description']);
+			}
+
+			$actionSections[] = new Section($section['title'], $sectionRows);
+		}
+
+		$response = $this->whatsapp_app_cloud_api->sendList(
+			$to,
+			$listHeader['text'],
+			$listBody['text'],
+			$listFooter['text'],
+			new Action($listAction['button'], $actionSections),
+		);
+
+		$this->assertEquals(200, $response->httpStatusCode());
+		$this->assertEquals($body, $response->decodedBody());
+		$this->assertEquals($encoded_body, $response->body());
+		$this->assertEquals(false, $response->isError());
+	}
 
     private function buildRequestUri(): string
     {
