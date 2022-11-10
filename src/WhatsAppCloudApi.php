@@ -28,6 +28,9 @@ use Netflie\WhatsAppCloudApi\Request\RequestStickerMessage;
 use Netflie\WhatsAppCloudApi\Request\RequestTemplateMessage;
 use Netflie\WhatsAppCloudApi\Request\RequestTextMessage;
 use Netflie\WhatsAppCloudApi\Request\RequestVideoMessage;
+use Netflie\WhatsAppCloudApi\Message\ButtonListMessage;
+use Netflie\WhatsAppCloudApi\Request\RequestButtonListMessage;
+use Netflie\WhatsAppCloudApi\Message\ButtonList\ButtonList;
 
 class WhatsAppCloudApi
 {
@@ -290,6 +293,19 @@ class WhatsAppCloudApi
 	{
 		$message = new OptionsListMessage($to, $header, $body, $footer, $action);
 		$request = new RequestOptionsListMessage(
+			$message,
+			$this->app->accessToken(),
+			$this->app->fromPhoneNumberId(),
+			$this->timeout
+		);
+
+		return $this->client->sendRequest($request);
+	}
+
+    public function sendSimpleButtons(string $to, string $msg, ButtonList $buttons): Response
+	{
+		$message = new ButtonListMessage($to, $msg, $buttons);
+		$request = new RequestButtonListMessage(
 			$message,
 			$this->app->accessToken(),
 			$this->app->fromPhoneNumberId(),
