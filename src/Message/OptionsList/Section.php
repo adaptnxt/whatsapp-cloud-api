@@ -6,7 +6,7 @@ class Section
 {
     protected string $title;
 
-	/** @var Row[] */
+    /** @var Row[] */
     protected array $rows;
 
     public function __construct(string $title, array $rows)
@@ -20,22 +20,21 @@ class Section
         return $this->title;
     }
 
-	/**
-	 * @return Row[]
-	 */
-	public function rows(): array
-	{
-		$result = [];
+    /**
+     * @return Row[]
+     */
+    public function rows(): array
+    {
+        $result = [];
 
-		foreach ($this->rows as $row)
-		{
-			$result[] = [
-				'id' => $row->id(),
-				'title' => $row->title(),
-				'description' => $row->description() ?: null,
-			];
-		}
+        foreach ($this->rows as $row) {
+            $result[] = [
+                'id' => $row->id(),
+                'title' => $row->title(),
+                'description' => $row->description() ?: null,
+            ];
+        }
 
-		return $result;
-	}
+        return $result;
+    }
 }

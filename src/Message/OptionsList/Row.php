@@ -17,18 +17,18 @@ class Row
         $this->description = $description;
     }
 
-	public function id(): string
-	{
-		return $this->id;
-	}
+    public function id(): string
+    {
+        return $this->id;
+    }
 
     public function title(): string
     {
         return $this->title;
     }
 
-	public function description(): ?string
-	{
-		return $this->description;
-	}
+    public function description(): ?string
+    {
+        return $this->description;
+    }
 }

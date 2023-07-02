@@ -6,7 +6,7 @@ class Action
 {
     protected string $button;
 
-	/** @var Section[] */
+    /** @var Section[] */
     protected array $sections;
 
     public function __construct(string $button, array $sections)
@@ -20,21 +20,20 @@ class Action
         return $this->button;
     }
 
-	/**
-	 * @return Section[]
-	 */
-	public function sections(): array
-	{
-		$result = [];
+    /**
+     * @return Section[]
+     */
+    public function sections(): array
+    {
+        $result = [];
 
-		foreach ($this->sections as $section)
-		{
-			$result[] = [
-				'title' => $section->title(),
-				'rows' => $section->rows(),
-			];
-		}
+        foreach ($this->sections as $section) {
+            $result[] = [
+                'title' => $section->title(),
+                'rows' => $section->rows(),
+            ];
+        }
 
-		return $result;
-	}
+        return $result;
+    }
 }
