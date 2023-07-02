@@ -1,20 +1,19 @@
 <?php
 
-namespace Netflie\WhatsAppCloudApi\Request;
+namespace Netflie\WhatsAppCloudApi\Request\MessageRequest;
 
-use Netflie\WhatsAppCloudApi\Request;
+use Netflie\WhatsAppCloudApi\Request\MessageRequest;
 
-class RequestContactMessage extends Request
+final class RequestContactMessage extends MessageRequest
 {
     /**
-     * Makes the raw body of the request.
-     *
-     */
-    protected function makeBody(): void
+    * {@inheritdoc}
+    */
+    public function body(): array
     {
         $message_type = $this->message->type();
 
-        $this->body = [
+        $body = [
             'messaging_product' => $this->message->messagingProduct(),
             'recipient_type' => $this->message->recipientType(),
             'to' => $this->message->to(),
@@ -31,10 +30,18 @@ class RequestContactMessage extends Request
         ];
 
         foreach ($this->message->phones() as $phone) {
-            $this->body[$message_type][0]['phones'][] = [
+            $phone_array = [
                 'phone' => $phone->number(),
                 'type' => $phone->type()->getValue(),
             ];
+
+            if (!empty($phone->waId())) {
+                $phone_array['wa_id'] = $phone->waId();
+            }
+
+            $body[$message_type][0]['phones'][] = $phone_array;
         }
+
+        return $body;
     }
 }

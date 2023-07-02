@@ -1,21 +1,17 @@
 <?php
 
-namespace Netflie\WhatsAppCloudApi\Request;
+namespace Netflie\WhatsAppCloudApi\Request\MessageRequest;
 
-use Netflie\WhatsAppCloudApi\Message\ButtonListMessage;
-use Netflie\WhatsAppCloudApi\Request;
+use Netflie\WhatsAppCloudApi\Request\MessageRequest;
 
-/**
- * @property ButtonListMessage $message
- */
-class RequestButtonListMessage extends Request
+final class RequestButtonListMessage extends MessageRequest
 {
     /**
     * {@inheritdoc}
     */
-    protected function makeBody(): void
+    public function body(): array
     {
-        $this->body = [
+        $body = [
             'messaging_product' => $this->message->messagingProduct(),
             'recipient_type' => $this->message->recipientType(),
             'to' => $this->message->to(),
@@ -26,5 +22,7 @@ class RequestButtonListMessage extends Request
 				'action' => ['buttons' => $this->message->buttonList()],
             ],
         ];
+
+        return $body;
     }
 }

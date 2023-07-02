@@ -69,6 +69,8 @@ You also can build templates with parameters:
 ```php
 <?php
 
+use Netflie\WhatsAppCloudApi\Message\Template\Component;
+
 $component_header = [];
 
 $component_body = [
@@ -111,6 +113,8 @@ $whatsapp_cloud_api->sendTemplate('34676104574', 'sample_issue_resolution', 'en_
 ```php
 <?php
 
+use Netflie\WhatsAppCloudApi\Message\Media\LinkID;
+
 $audio_link = 'https://netflie.es/wp-content/uploads/2022/05/file_example_OOG_1MG.ogg';
 $link_id = new LinkID($audio_link);
 $whatsapp_cloud_api->sendAudio('34676104574', $link_id);
@@ -119,6 +123,9 @@ $whatsapp_cloud_api->sendAudio('34676104574', $link_id);
 ### Send an image message
 ```php
 <?php
+
+use Netflie\WhatsAppCloudApi\Message\Media\LinkID;
+use Netflie\WhatsAppCloudApi\Message\Media\MediaObjectID;
 
 $link_id = new LinkID('http(s)://image-url');
 $whatsapp_cloud_api->sendImage('<destination-phone-number>', $link_id);
@@ -132,6 +139,9 @@ $whatsapp_cloud_api->sendImage('<destination-phone-number>', $media_id);
 ### Send a video message
 ```php
 <?php
+
+use Netflie\WhatsAppCloudApi\Message\Media\LinkID;
+use Netflie\WhatsAppCloudApi\Message\Media\MediaObjectID;
 
 $link_id = new LinkID('http(s)://video-url');
 $whatsapp_cloud_api->sendVideo('<destination-phone-number>', $link_id, '<video-caption>');
@@ -148,6 +158,9 @@ Stickers sample: https://github.com/WhatsApp/stickers
 
 ```php
 <?php
+
+use Netflie\WhatsAppCloudApi\Message\Media\LinkID;
+use Netflie\WhatsAppCloudApi\Message\Media\MediaObjectID;
 
 $link_id = new LinkID('http(s)://sticker-url');
 $whatsapp_cloud_api->sendSticker('<destination-phone-number>', $link_id);
@@ -171,10 +184,130 @@ $whatsapp_cloud_api->sendLocation('<destination-phone-number>', $longitude, $lat
 ```php
 <?php
 
+use Netflie\WhatsAppCloudApi\Message\Contact\ContactName;
+use Netflie\WhatsAppCloudApi\Message\Contact\Phone;
+use Netflie\WhatsAppCloudApi\Message\Contact\PhoneType;
+
 $name = new ContactName('Adams', 'Smith');
 $phone = new Phone('34676204577', PhoneType::CELL());
 
 $whatsapp_cloud_api->sendContact('<destination-phone-number>', $name, $phone);
+```
+
+### Send a list message
+
+```php
+<?php
+
+use Netflie\WhatsAppCloudApi\Message\OptionsList\Row;
+use Netflie\WhatsAppCloudApi\Message\OptionsList\Section;
+use Netflie\WhatsAppCloudApi\Message\OptionsList\Action;
+
+$rows = [
+    new Row('1', '⭐️', "Experience wasn't good enough"),
+    new Row('2', '⭐⭐️', "Experience could be better"),
+    new Row('3', '⭐⭐⭐️', "Experience was ok"),
+    new Row('4', '⭐⭐️⭐⭐', "Experience was good"),
+    new Row('5', '⭐⭐️⭐⭐⭐️', "Experience was excellent"),
+];
+$sections = [new Section('Stars', $rows)];
+$action = new Action('Submit', $sections);
+
+$whatsapp_cloud_api->sendList(
+    '<destination-phone-number>',
+    'Rate your experience',
+    'Please consider rating your shopping experience in our website',
+    'Thanks for your time',
+    $action
+);
+```
+
+## Media messages
+### Upload media resources
+Media messages accept as identifiers an Internet URL pointing to a public resource (image, video, audio, etc.). When you try to send a media message from a URL you must instantiate the `LinkID` object.
+
+You can also upload your media resources to WhatsApp servers and you will receive a resource identifier:
+
+```php
+$response = $whatsapp_cloud_api->uploadMedia('my-image.png');
+
+$media_id = new MediaObjectID($response->decodedBody()['id']);
+$whatsapp_cloud_api->sendImage('<destination-phone-number>', $media_id);
+
+```
+
+### Upload media resources
+To download a media resource:
+
+```php
+$response = $whatsapp_cloud_api->downloadMedia('<media-id>');
+```
+
+
+## Message Response
+WhatsAppCloudApi instance returns a Response class or a ResponseException if WhatsApp servers return an error.
+
+```php
+try {
+    $response = $this->whatsapp_app_cloud_api->sendTextMessage(
+        '<destination-phone-number>,
+        'Hey there! I\'m using WhatsApp Cloud API. Visit https://www.netflie.es',
+        true
+    );
+} catch (\Netflie\WhatsAppCloudApi\Response\ResponseException $e) {
+    print_r($e->response()); // You can still check the Response returned from Meta servers
+}
+```
+
+## Webhooks
+
+### Webhook verification
+Add your webhook in your Meta App dashboard. You need to verify your webhook:
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use Netflie\WhatsAppCloudApi\WebHook;
+
+// Instantiate the WhatsAppCloudApi super class.
+$webhook = new WebHook();
+
+echo $webhook->verify($_GET, "<the-verify-token-defined-in-your-app-dashboard>");
+```
+
+### Webhook notifications
+Webhook is now verified, you will start receiving notifications every time your customers send messages.
+
+
+```php
+<?php
+require 'vendor/autoload.php';
+define('STDOUT', fopen('php://stdout', 'w'));
+
+use Netflie\WhatsAppCloudApi\WebHook;
+
+
+$payload = file_get_contents('php://input');
+fwrite(STDOUT, print_r($payload, true) . "\n");
+
+// Instantiate the Webhook super class.
+$webhook = new WebHook();
+
+fwrite(STDOUT, print_r($webhook->read(json_decode($payload, true)), true) . "\n");
+```
+
+The `Webhook::read` function will return a `Notification` instance. Please, [explore](https://github.com/netflie/whatsapp-cloud-api/tree/main/src/WebHook/Notification "explore") the different notifications availables.
+
+### Mark a message as read
+When you receive an incoming message from Webhooks, you can mark the message as read by changing its status to read. Messages marked as read display two blue check marks alongside their timestamp.
+
+Marking a message as read will also mark earlier messages in the conversation as read.
+
+```php
+<?php
+
+$whatsapp_cloud_api->markMessageAsRead('<message-id>');
 ```
 
 ## Features
@@ -188,10 +321,20 @@ $whatsapp_cloud_api->sendContact('<destination-phone-number>', $name, $phone);
 - Send Stickers
 - Send Locations
 - Send Contacts
+- Send Lists
+- Upload media resources to WhatsApp servers
+- Download media resources from WhatsApp servers
+- Mark messages as read
+- Webhook verification
+- Webhook notifications
 
 ## Getting Help
 - Ask a question on the [Discussions forum](https://github.com/netflie/whatsapp-cloud-api/discussions "Discussions forum")
 - To report bugs, please [open an issue](https://github.com/netflie/whatsapp-cloud-api/issues/new/choose "open an issue")
+
+## Migration to v2
+
+Please see [UPGRADE](https://github.com/netflie/whatsapp-cloud-api/blob/main/UPGRADE.md "UPGRADE") for more information on how to upgrade to v2.
 
 ## Changelog
 
@@ -207,7 +350,7 @@ composer integration-test
 ```
 ## Contributing
 
-Please see [CONTRIBUTING](https://github.com/netflie/.github/blob/main/CONTRIBUTING.md "CONTRIBUTING") for details.
+Please see [CONTRIBUTING](https://github.com/netflie/.github/blob/master/CONTRIBUTING.md "CONTRIBUTING") for details.
 
 ## License
 
