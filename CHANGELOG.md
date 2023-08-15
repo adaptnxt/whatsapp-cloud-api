@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.0 - 2023-08-12
+
+### What's Changed
+
+- Media filename and sha256 are now available on Webhook notification Media object. See PR #126
+
+## 2.0.5 - 2023-06-24
+
+### What's Changed
+
+- Fix message notification initialization when context is empty. See PR #114
+
 ## 2.0.4 - 2023-06-01
 
 ### What's Changed
