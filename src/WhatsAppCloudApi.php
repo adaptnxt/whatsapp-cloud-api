@@ -14,7 +14,7 @@ class WhatsAppCloudApi
     /**
      * @const string Default Graph API version.
      */
-    public const DEFAULT_GRAPH_VERSION = 'v15.0';
+    public const DEFAULT_GRAPH_VERSION = 'v17.0';
 
     /**
      * @var WhatsAppCloudApiApp The WhatsAppCloudApiApp entity.
@@ -42,12 +42,17 @@ class WhatsAppCloudApi
         $config = array_merge([
             'from_phone_number_id' => null,
             'access_token' => '',
+            'business_id' => '',
             'graph_version' => static::DEFAULT_GRAPH_VERSION,
             'client_handler' => null,
             'timeout' => null,
         ], $config);
 
-        $this->app = new WhatsAppCloudApiApp($config['from_phone_number_id'], $config['access_token']);
+        $this->app = new WhatsAppCloudApiApp(
+            $config['from_phone_number_id'],
+            $config['access_token'],
+            $config['business_id']
+        );
         $this->timeout = $config['timeout'];
         $this->client = new Client($config['graph_version'], $config['client_handler']);
     }
@@ -352,6 +357,48 @@ class WhatsAppCloudApi
         );
 
         return $this->client->sendMessage($request);
+    }
+
+    /**
+     * Get Business Profile
+     *
+     * @param  string    $fields WhatsApp profile fields.
+     *
+     * @return Response
+     *
+     * @throws Response\ResponseException
+     */
+    public function businessProfile(string $fields): Response
+    {
+        $request = new Request\BusinessProfileRequest\BusinessProfileRequest(
+            $fields,
+            $this->app->accessToken(),
+            $this->app->fromPhoneNumberId(),
+            $this->timeout
+        );
+
+        return $this->client->businessProfile($request);
+    }
+
+    /**
+     * Update Business Profile
+     *
+     * @param  array    $information Whatsapp profile information.
+     *
+     * @return Response
+     *
+     * @throws Response\ResponseException
+     */
+    public function updateBusinessProfile(array $information): Response
+    {
+        $request = new Request\BusinessProfileRequest\UpdateBusinessProfileRequest(
+            $information,
+            $this->app->accessToken(),
+            $this->app->fromPhoneNumberId(),
+            $this->timeout
+        );
+
+        return $this->client->updateBusinessProfile($request);
     }
 
     /**
