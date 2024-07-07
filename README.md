@@ -179,6 +179,15 @@ $whatsapp_cloud_api->sendSticker('<destination-phone-number>', $media_id);
 $whatsapp_cloud_api->sendLocation('<destination-phone-number>', $longitude, $latitude, $name, $address);
 ```
 
+### Send a location request message
+
+```php
+<?php
+
+$body = 'Let\'s start with your pickup. You can either manually *enter an address* or *share your current location*.';
+$whatsapp_cloud_api->sendLocationRequest('<destination-phone-number>', $body);
+```
+
 ### Send a contact message
 
 ```php
@@ -219,6 +228,25 @@ $whatsapp_cloud_api->sendList(
     'Please consider rating your shopping experience in our website',
     'Thanks for your time',
     $action
+);
+```
+
+### Send a CTA URL message
+
+```php
+<?php
+
+use Netflie\WhatsAppCloudApi\Message\CtaUrl\TitleHeader;
+
+$header = new TitleHeader('Booking');
+
+$whatsapp_cloud_api->sendCtaUrl(
+    '<destination-phone-number>',
+    'See Dates',
+    'https://www.example.com',
+    $header,
+    'Tap the button below to see available dates.',
+    'Dates subject to change.',
 );
 ```
 
@@ -388,6 +416,7 @@ Fields list: https://developers.facebook.com/docs/whatsapp/cloud-api/reference/b
 - Send Videos
 - Send Stickers
 - Send Locations
+- Send Location Request
 - Send Contacts
 - Send Lists
 - Send Buttons
